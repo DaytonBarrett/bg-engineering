@@ -1,5 +1,6 @@
 # bg-engineering
-<img width="267" height="149" alt="Screenshot 2026-08-28 at 8 43 37 AM" src="https://github.com/user-attachments/assets/2094d1d3-bf2c-42f0-919d-ead3f8952084" />
+
+<img width="1048" height="560" alt="Screenshot 2026-08-28 at 8 44 06 AM" src="https://github.com/user-attachments/assets/d84e7271-22f6-44f8-ad91-2369fdc75f7d" />
 
 Code for Best Guess Engineering VEX Override game
 
