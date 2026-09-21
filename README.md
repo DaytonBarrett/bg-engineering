@@ -6,4 +6,4 @@ Code for Best Guess Engineering VEX Override game
 
 Greatest engineering team of all time
 
-Built by Dayton Barrett, Brett Alfaro, Charlie Krause, and Tyler Montegue.
+Built by Dayton Barrett, Brett Alfaro, Charlie Krause, Julian Torres and Tyler Montegue.
