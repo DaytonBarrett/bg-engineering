@@ -1,0 +1,60 @@
+MIN_SCORE = 0
+MAX_SCORE = 100
+
+
+def get_grade():
+    """Keep asking until the user enters a whole number from 0 to 100."""
+    while True:
+        entry = input("Enter student grade: ")
+        try:
+            grade = int(entry)
+        except ValueError:
+            print("Invalid grade. Please enter a whole number.")
+            continue
+
+        if MIN_SCORE <= grade <= MAX_SCORE:
+            return grade
+
+        print("Invalid grade. Grade must be between", MIN_SCORE, "and", MAX_SCORE)
+
+
+def main():
+    # Start with an empty dictionary
+    gradebook = {}
+
+    # Let the user add as many names and grades as they want
+    while True:
+        name = input("Enter student name or enter q to quit: ").strip()
+        if name.lower() == "q":
+            break
+        if name == "":
+            print("Name cannot be blank.")
+            continue
+
+        # Entering an existing name replaces that student's grade
+        gradebook[name] = get_grade()
+
+    # Avoid dividing by zero if no students were entered
+    if len(gradebook) == 0:
+        print("\nNo students were entered.")
+        return
+
+    # Retrieve a list of values and use sequence functions
+    scores = list(gradebook.values())
+    high = max(scores)
+    low = min(scores)
+    average = sum(scores) / len(scores)
+
+    # Display the report using the format function
+    print()
+    print("Grade Report")
+    print("-----------")
+    for name in gradebook:
+        print(format(name, "<10") + format(gradebook[name], ">5d"))
+    print()
+    print("High score: " + format(high, "d"))
+    print("Low score: " + format(low, "d"))
+    print("Average score: " + format(average, ".2f"))
+
+
+main()
