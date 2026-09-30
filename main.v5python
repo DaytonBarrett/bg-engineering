@@ -13,8 +13,8 @@ bl = Motor(Ports.PORT3, GearSetting.RATIO_6_1, True)
 br = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 motors = [fl, fr, bl, br]
 
-WHEEL_DIAMETER_IN  = 3.25      # 2.75 for the smaller omnis
-GEAR_RATIO         = 60 / 36   # motor turns per wheel turn
+WHEEL_DIAMETER_IN  = 2.75      # 2.75 for the smaller omnis
+GEAR_RATIO         = 36 / 60   # motor turns per wheel turn
 CENTER_TO_WHEEL_IN = 7.0       # robot center to wheel contact: measure this
 DEADBAND           = 0.05
 TURN_SENSITIVITY   = 0.85
