@@ -74,7 +74,7 @@ def turn(degrees, speed=50):
 def autonomous():
     for m in motors:
         m.set_stopping(HOLD)
-    move(675)          # forward 50 in, then stop
+    move(50)          # forward 40 ft in, then stop for testing
     # move(24)       # forward 24 in
     # move(12, 90)    # strafe right 12 in
     # turn(90)        # 90 deg clockwise
