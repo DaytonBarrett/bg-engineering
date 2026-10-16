@@ -137,5 +137,17 @@ def driver_control():
               stick(controller.axis1) * TURN_SENSITIVITY)
         wait(10, MSEC)
 
+def trigger_piston():
+    # 1. Push the piston out (Extend)
+    piston.set(True)
+    
+    # 2. Briefly wait for the air pressure to fully push the cylinder out
+    # Change 150 milliseconds to a higher number if your mechanism is heavy
+    wait(150, msec) 
+    
+    # 3. Immediately pull the piston back in (Retract)
+    piston.set(False)
+
+controller_1.buttonR1.pressed(trigger_piston)
 
 competition = Competition(driver_control, autonomous)
