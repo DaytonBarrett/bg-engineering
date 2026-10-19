@@ -144,11 +144,17 @@ def moveBL(inches, angle=-135, speed=60):#Move backward
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
+def moveBR(inches, angle=135, speed=60):#Move backward
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
 def turn(degrees, speed=50):
     """Clockwise positive."""
     arc = degrees * math.pi / 180 * CENTER_TO_WHEEL_IN
     move_wheels([arc, -arc, arc, -arc], speed)
-
 
 def autonomous():
     for m in motors:
