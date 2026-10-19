@@ -1,3 +1,41 @@
+#region VEXcode Generated Robot Configuration
+from vex import *
+import urandom
+import math
+
+# Brain should be defined by default
+brain=Brain()
+
+# Robot configuration code
+piston = DigitalOut(brain.three_wire_port.a)
+
+
+# wait for rotation sensor to fully initialize
+wait(30, MSEC)
+
+
+# Make random actually random
+def initializeRandomSeed():
+    wait(100, MSEC)
+    random = brain.battery.voltage(MV) + brain.battery.current(CurrentUnits.AMP) * 100 + brain.timer.system_high_res()
+    urandom.seed(int(random))
+      
+# Set random seed 
+initializeRandomSeed()
+
+
+def play_vexcode_sound(sound_name):
+    # Helper to make playing sounds from the V5 in VEXcode easier and
+    # keeps the code cleaner by making it clear what is happening.
+    print("VEXPlaySound:" + sound_name)
+    wait(5, MSEC)
+
+# add a small delay to make sure we don't print in the middle of the REPL header
+wait(200, MSEC)
+# clear the console to make sure we don't have the REPL in the console
+print("\033[2J")
+
+#endregion VEXcode Generated Robot Configuration
 # X-Drive | VEX V5 Python | omni wheels, blue 600 RPM cartridges, 36:60 reduction
 from vex import *
 import math
@@ -106,14 +144,6 @@ def moveBL(inches, angle=-135, speed=60):#Move backward
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBL(inches, angle=135, speed=60):#Move backward
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
-
-
 def turn(degrees, speed=50):
     """Clockwise positive."""
     arc = degrees * math.pi / 180 * CENTER_TO_WHEEL_IN
@@ -123,11 +153,16 @@ def turn(degrees, speed=50):
 def autonomous():
     for m in motors:
         m.set_stopping(HOLD)
-    movef(60 inches)          # forward 60 in
-    # moveR(60)    # Right 60  in
-    # moveL(60)    # Left 60 in
-    # moveB(60)    #Backward 60 inches
-    #MoveFR (60)  #Move foward and right 
+    trigger_piston()
+    wait(.3, SECONDS)
+    trigger_piston()
+    wait(.3, SECONDS)
+    movef(60, INCHES)
+    wait(.3, SECONDS)
+    trigger_piston()
+    wait(.3, SECONDS)
+    trigger_piston()
+
 
 def driver_control():
     for m in motors:
@@ -143,11 +178,11 @@ def trigger_piston():
     
     # 2. Briefly wait for the air pressure to fully push the cylinder out
     # Change 150 milliseconds to a higher number if your mechanism is heavy
-    wait(150, msec) 
+    wait(200, MSEC) 
     
     # 3. Immediately pull the piston back in (Retract)
     piston.set(False)
 
-controller_1.buttonR1.pressed(trigger_piston)
+controller.buttonR1.pressed(trigger_piston)
 
 competition = Competition(driver_control, autonomous)
