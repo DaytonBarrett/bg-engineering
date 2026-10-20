@@ -116,7 +116,7 @@ def moveL(inches, angle=-90, speed=60):#Move left
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveB(inches, angle=-90, speed=60):#Move backward
+def moveB(inches, angle=-180, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -163,8 +163,8 @@ def autonomous():
     wait(.3, SECONDS)
     trigger_piston()
     wait(.3, SECONDS)
-    movef(60)
-    moveFR(170)
+    movef(72)
+    moveFR(165)
     turn(-290)
     moveB(60)
     wait(.3, SECONDS)
