@@ -52,7 +52,7 @@ br = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 motors = [fl, fr, bl, br]
 
 WHEEL_DIAMETER_IN  = 2.75      # 2.75 for the smaller omnis
-GEAR_RATIO         = 36 / 60   # motor turns per wheel turn
+GEAR_RATIO         = 60 / 36   # Wheel turns per motor turn
 CENTER_TO_WHEEL_IN = 7.0       # robot center to wheel contact: measure this
 DEADBAND           = 0.05
 TURN_SENSITIVITY   = 0.85
@@ -123,28 +123,28 @@ def moveB(inches, angle=-180, speed=60):#Move backward
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFL(inches, angle=-45, speed=60):#Move backward
+def moveFL(inches, angle=-45, speed=60):#Move fowardleft
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFR(inches, angle=45, speed=60):#Move backward
+def moveFR(inches, angle=45, speed=60):#Move foward right
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBL(inches, angle=-135, speed=60):#Move backward
+def moveBL(inches, angle=-135, speed=60):#Move back left
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBR(inches, angle=135, speed=60):#Move backward
+def moveBR(inches, angle=135, speed=60):#Move back right
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -160,8 +160,8 @@ def autonomous():
     for m in motors:
         m.set_stopping(HOLD)
     moveF(80)
-    moveR(90)
-    moveF(60)
+   # moveR(90)
+   # moveF(60)
 #    trigger_piston()
  #   wait(.3, SECONDS)
   #  trigger_piston()
