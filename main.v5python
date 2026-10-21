@@ -162,7 +162,7 @@ def autonomous():
     moveF(80)
    # moveR(90)
    # moveF(60)
-#    trigger_piston()
+# #   trigger_piston()
  #   wait(.3, SECONDS)
   #  trigger_piston()
    # wait(.3, SECONDS)
