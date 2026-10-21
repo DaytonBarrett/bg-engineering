@@ -95,7 +95,7 @@ def move_wheels(wheel_inches, speed):
         m.stop()
 
 
-def movef(inches, angle=0, speed=60): #Move Foward
+def moveF(inches, angle=0, speed=60): #Move Foward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -159,18 +159,21 @@ def turn(degrees, speed=50):
 def autonomous():
     for m in motors:
         m.set_stopping(HOLD)
-    trigger_piston()
-    wait(.3, SECONDS)
-    trigger_piston()
-    wait(.3, SECONDS)
-    movef(72)
-    moveFR(150)
-    turn(-290)
-    moveB(110)
-    wait(.3, SECONDS)
-    trigger_piston()
-    wait(.5, SECONDS)
-    trigger_piston()
+    moveF(80)
+    moveR(90)
+    moveF(60)
+#    trigger_piston()
+ #   wait(.3, SECONDS)
+  #  trigger_piston()
+   # wait(.3, SECONDS)
+    #movef(72)
+    #moveFR(150)
+    #turn(-290)
+    #moveB(110)
+    #wait(.3, SECONDS)
+    #trigger_piston()
+    #wait(.5, SECONDS)
+    #trigger_piston()
 
 
 def driver_control():
