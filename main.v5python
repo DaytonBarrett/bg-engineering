@@ -7,8 +7,7 @@ import math
 brain=Brain()
 
 # Robot configuration code
-piston = DigitalOut(brain.three_wire_port.a)
-Inertial = DigitalOut(Ports.PORT13)
+digital_out_a = DigitalOut(brain.three_wire_port.a)
 
 
 # wait for rotation sensor to fully initialize
@@ -53,7 +52,7 @@ br = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 motors = [fl, fr, bl, br]
 
 WHEEL_DIAMETER_IN  = 2.75      # 2.75 for the smaller omnis
-GEAR_RATIO         = 60 / 36   # Wheel turns per motor turn
+GEAR_RATIO         = 36 / 60   # motor turns per wheel turn
 CENTER_TO_WHEEL_IN = 7.0       # robot center to wheel contact: measure this
 DEADBAND           = 0.05
 TURN_SENSITIVITY   = 0.85
@@ -96,7 +95,7 @@ def move_wheels(wheel_inches, speed):
         m.stop()
 
 
-def moveF(inches, angle=0, speed=60): #Move Foward
+def movef(inches, angle=0, speed=60): #Move Foward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -117,65 +116,56 @@ def moveL(inches, angle=-90, speed=60):#Move left
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveB(inches, angle=-180, speed=60):#Move backward
+def moveB(inches, angle=-90, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFL(inches, angle=-45, speed=60):#Move fowardleft
+def moveFL(inches, angle=-45, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFR(inches, angle=45, speed=60):#Move foward right
+def moveFR(inches, angle=45, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBL(inches, angle=-135, speed=60):#Move back left
+def moveBL(inches, angle=-135, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBR(inches, angle=135, speed=60):#Move back right
+def moveBL(inches, angle=135, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
+
 
 def turn(degrees, speed=50):
     """Clockwise positive."""
     arc = degrees * math.pi / 180 * CENTER_TO_WHEEL_IN
     move_wheels([arc, -arc, arc, -arc], speed)
 
+
 def autonomous():
     for m in motors:
         m.set_stopping(HOLD)
-    moveF(80)
-   # moveR(90)
-   # moveF(60)
-# #   trigger_piston()
- #   wait(.3, SECONDS)
-  #  trigger_piston()
-   # wait(.3, SECONDS)
-    #movef(72)
-    #moveFR(150)
-    #turn(-290)
-    #moveB(110)
-    #wait(.3, SECONDS)
-    #trigger_piston()
-    #wait(.5, SECONDS)
-    #trigger_piston()
-
+    movef(60 inches)          # forward 60 in
+    # moveR(60)    # Right 60  in
+    # moveL(60)    # Left 60 in
+    # moveB(60)    #Backward 60 inches
+    #MoveFR (60)  #Move foward and right 
 
 def driver_control():
     for m in motors:
@@ -190,12 +180,12 @@ def trigger_piston():
     piston.set(True)
     
     # 2. Briefly wait for the air pressure to fully push the cylinder out
-    # Change 150 milliseconds to a higher number if your mechanism is heavy
-    wait(200, MSEC) 
+    # Change 150 milliseconds to a higher number if your mechanism does not finish
+    wait(1000, msec) 
     
     # 3. Immediately pull the piston back in (Retract)
     piston.set(False)
 
-controller.buttonR1.pressed(trigger_piston)
+controller_1.buttonR1.pressed(trigger_piston)
 
 competition = Competition(driver_control, autonomous)
