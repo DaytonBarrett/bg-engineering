@@ -8,6 +8,7 @@ brain=Brain()
 
 # Robot configuration code
 piston = DigitalOut(brain.three_wire_port.a)
+Inertial = DigitalOut(Ports.PORT13)
 
 
 # wait for rotation sensor to fully initialize
