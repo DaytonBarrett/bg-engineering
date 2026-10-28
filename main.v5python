@@ -124,7 +124,7 @@ def moveL(inches, angle=-90, speed=60):#Move left
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveB(inches, angle=-90, speed=60):#Move backward
+def moveB(inches, angle=-180, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -190,21 +190,18 @@ def autonomous():
     for m in motors:
         m.set_stopping(HOLD)
         imu.set_heading(0, DEGREES)
-    turn_to(90) 
+    trigger_piston() #turns toggle twice
+    wait(500, MSEC)
+    trigger_piston()
     wait(100, MSEC)
-    turn_to(0)
-    wait(100, MSEC)
-    turn_to(180)
-    wait(100, MSEC)
-    turn_to(330)
-    wait(100, MSEC)
-    turn_to(0)
-    wait(100, MSEC)
-    turn_to(-90)
-    wait(100, MSEC)
-    # moveL(60)    # Left 60 in
-    # moveB(60)    #Backward 60 inches
-    #MoveFR (60)  #Move foward and right 
+    moveF(35) #Moves to between the two cones 
+    moveFR(20) #moves towards right toggle between the other code
+    turn_to(220)  #orrients the piston to face the other toggle
+    moveB(35) #Moves back to other toggle
+    trigger_piston()
+    wait(500, MSEC)
+    trigger_piston()
+    wait(100, MSEC) #turns piston twice
 
 def driver_control():
     for m in motors:
