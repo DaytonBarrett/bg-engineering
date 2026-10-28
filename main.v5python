@@ -63,7 +63,7 @@ SLEW               = 1.2       # max volts gained per 10 ms loop (~0.1 s to full
 
 volts = [0.0, 0.0, 0.0, 0.0]   # last voltage sent to each motor
 
-brain.screen.print("Are you Ready")
+brain.screen.print("Are you Ready, yea you are")
 imu.calibrate()
 while imu.is_calibrating():
     wait(50,MSEC)
@@ -187,7 +187,7 @@ def turn_to(target, speed=60, timeout=2.0):
 
 
 def autonomous():
-    for m in motors:
+     for m in motors:
         m.set_stopping(HOLD)
         imu.set_heading(0, DEGREES)
     trigger_piston() #turns toggle twice
