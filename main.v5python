@@ -51,7 +51,7 @@ bl = Motor(Ports.PORT3, GearSetting.RATIO_6_1, True)
 br = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 motors = [fl, fr, bl, br]
 
-imu = Intertia(Ports.PORT11)
+imu = Intertial(Ports.PORT11)
 
 WHEEL_DIAMETER_IN  = 2.75      # 2.75 for the smaller omnis
 GEAR_RATIO         = 60/36   # motor turns per wheel turn
@@ -61,6 +61,11 @@ TURN_SENSITIVITY   = 0.85
 SLEW               = 1.2       # max volts gained per 10 ms loop (~0.1 s to full power)
 
 volts = [0.0, 0.0, 0.0, 0.0]   # last voltage sent to each motor
+
+brain.screen.print("Are you Ready")
+imu.calibrate()
+while imu.is_calibrating():
+    wait(50,MSEC)
 
 
 def stick(axis):
@@ -154,16 +159,36 @@ def moveBL(inches, angle=135, speed=60):#Move backward
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
 
-def turn(degrees, speed=50):
+def turn_to(target, speed=60, timeout=2.0)
+#Turn to a specific heading with a max speed of 60 with max time being 2 seconds
     """Clockwise positive."""
-    arc = degrees * math.pi / 180 * CENTER_TO_WHEEL_IN
-    move_wheels([arc, -arc, arc, -arc], speed)
+    end = brain.timer.time(SECONDS) + timeout
+ 
+    while brain.timer.time(SECONDS) < end:
+        error = target - imu.rotation()
+ 
+        if abs(error) < 1.5:     # close enough, stop
+            break
+ 
+        speed = max(-max_speed, min(max_speed, speed))   # cap top speed
+        if abs(speed) < 8:                               # minimum so it doesn't stall
+            speed = 8 if speed > 0 else -8
+ 
+        # Positive speed turns clockwise (right), negative turns left
+        fl.spin(FORWARD,  speed, PERCENT)
+        fr.spin(FORWARD, -speed, PERCENT)
+        bl.spin(FORWARD,  speed, PERCENT)
+        br.spin(FORWARD, -speed, PERCENT)
+        wait(10, MSEC)
+ 
+    for m in motors:
+        m.stop()
 
 
 def autonomous():
     for m in motors:
         m.set_stopping(HOLD)
-    movef(60 inches)          # forward 60 in
+    movef(60)          # forward 60 in
     # moveR(60)    # Right 60  in
     # moveL(60)    # Left 60 in
     # moveB(60)    #Backward 60 inches
