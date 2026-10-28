@@ -7,7 +7,8 @@ import math
 brain=Brain()
 
 # Robot configuration code
-digital_out_a = DigitalOut(brain.three_wire_port.a)
+inertial_11 = Inertial(Ports.PORT11)
+piston = DigitalOut(brain.three_wire_port.a)
 
 
 # wait for rotation sensor to fully initialize
@@ -51,7 +52,7 @@ bl = Motor(Ports.PORT3, GearSetting.RATIO_6_1, True)
 br = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 motors = [fl, fr, bl, br]
 
-imu = Intertial(Ports.PORT11)
+imu = Inertial(Ports.PORT11)
 
 WHEEL_DIAMETER_IN  = 2.75      # 2.75 for the smaller omnis
 GEAR_RATIO         = 60/36   # motor turns per wheel turn
@@ -102,7 +103,7 @@ def move_wheels(wheel_inches, speed):
         m.stop()
 
 
-def movef(inches, angle=0, speed=60): #Move Foward
+def moveF(inches, angle=0, speed=60): #Move Foward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -151,7 +152,7 @@ def moveBL(inches, angle=-135, speed=60):#Move backward
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBL(inches, angle=135, speed=60):#Move backward
+def moveBR(inches, angle=135, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -159,18 +160,18 @@ def moveBL(inches, angle=135, speed=60):#Move backward
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
 
-def turn_to(target, speed=60, timeout=2.0)
+def turn_to(target, speed=60, timeout=2.0):
 #Turn to a specific heading with a max speed of 60 with max time being 2 seconds
     """Clockwise positive."""
     end = brain.timer.time(SECONDS) + timeout
  
     while brain.timer.time(SECONDS) < end:
-        error = target - imu.rotation()
+        error = target - imu.heading(DEGREES)
  
         if abs(error) < 1.5:     # close enough, stop
             break
  
-        speed = max(-max_speed, min(max_speed, speed))   # cap top speed
+        speed = max(-60, min(60, speed))   # cap top speed
         if abs(speed) < 8:                               # minimum so it doesn't stall
             speed = 8 if speed > 0 else -8
  
@@ -188,8 +189,19 @@ def turn_to(target, speed=60, timeout=2.0)
 def autonomous():
     for m in motors:
         m.set_stopping(HOLD)
-    movef(60)          # forward 60 in
-    # moveR(60)    # Right 60  in
+        imu.set_heading(0, DEGREES)
+    turn_to(90) 
+    wait(100, MSEC)
+    turn_to(0)
+    wait(100, MSEC)
+    turn_to(180)
+    wait(100, MSEC)
+    turn_to(330)
+    wait(100, MSEC)
+    turn_to(0)
+    wait(100, MSEC)
+    turn_to(-90)
+    wait(100, MSEC)
     # moveL(60)    # Left 60 in
     # moveB(60)    #Backward 60 inches
     #MoveFR (60)  #Move foward and right 
@@ -207,12 +219,11 @@ def trigger_piston():
     piston.set(True)
     
     # 2. Briefly wait for the air pressure to fully push the cylinder out
-    # Change 150 milliseconds to a higher number if your mechanism does not finish
-    wait(1000, msec) 
+    wait(150, MSEC) 
     
     # 3. Immediately pull the piston back in (Retract)
     piston.set(False)
 
-controller_1.buttonR1.pressed(trigger_piston)
+controller.buttonR1.pressed(trigger_piston)
 
 competition = Competition(driver_control, autonomous)
