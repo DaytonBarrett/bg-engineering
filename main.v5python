@@ -160,59 +160,66 @@ def moveBR(inches, angle=135, speed=60):#Move backward
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
 
+def angle_error(target, current):
+    """Shortest signed error in degrees, range -180 to 180. Positive = need to turn right."""
+    return (target - current + 180) % 360 - 180
+
+def turn_to(target, max_speed=60, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.0):
+    timer = Timer()
+    timer.reset()
+    settled = 0
+
+    while timer.time(SECONDS) < timeout:
+        error = angle_error(target, imu.heading(DEGREES))
+
+        if abs(error) <= tolerance:
+            settled += 1
+            if settled >= 5:        # in tolerance for ~50 ms, so it's actually stopped
+                break
+        else:
+            settled = 0
+
+        speed = kp * error
+        # clamp speed, keeping enough power to overcome friction
+        if abs(speed) > max_speed:
+            speed = max_speed if speed > 0 else -max_speed
+        elif abs(speed) < min_speed and abs(error) > tolerance:
+            speed = min_speed if speed > 0 else -min_speed
+
+        # positive speed = clockwise (same pattern as your turn_right_to)
+        fl.spin(FORWARD,  speed, PERCENT)
+        fr.spin(FORWARD, -speed, PERCENT)
+        bl.spin(FORWARD,  speed, PERCENT)
+        br.spin(FORWARD, -speed, PERCENT)
+
+        wait(10, MSEC)
+
+    for m in motors:
+        m.stop(BRAKE)
+
 def turn_right_to(target, speed=60):
-    """Clockwise right/positive."""
-    h = target - 0.25 
-    j = target + 0.25
+    turn_to(target, max_speed=speed)
 
-    #adds buffer window
-    
-    fl.spin(FORWARD,  speed, PERCENT)
-    fr.spin(FORWARD, -speed, PERCENT)
-    bl.spin(FORWARD,  speed, PERCENT)
-    br.spin(FORWARD, -speed, PERCENT)
-
-    while current_heading < h and current_heading > j:
-
-        wait(.01, SECONDS)
- 
-    for m in motors:
-        m.stop()
-
-def turn_left_to(target, speed=60, timeout=2.0):
-    """Counter-Clockwise left/negative."""
-    h = target - 0.25 
-    j = target + 0.25
-    
-    fl.spin(REVERSE,  speed, PERCENT)
-    fr.spin(REVERSE, -speed, PERCENT)
-    bl.spin(REVERSE,  speed, PERCENT)
-    br.spin(REVERSE, -speed, PERCENT)
-
-    while current_heading < h and current_heading > j:
-
-        wait(.01,SECONDS)
- 
-    for m in motors:
-        m.stop()
+def turn_left_to(target, speed=60):
+    turn_to(target, max_speed=speed)
 
 def autonomous():
      for m in motors:
         m.set_stopping(HOLD)
         imu.set_heading(0, DEGREES)
-    trigger_piston() #turns toggle twice
-    wait(500, MSEC)
-    trigger_piston()
-    wait(100, MSEC)
-    moveF(35) #Moves to between the two cones 
-    moveFR(20) #moves towards right toggle between the other code
-    turn_right_to(220)  #orrients the piston to face the other toggle
-    moveB(35) #Moves back to other toggle
-    trigger_piston()
-    wait(500, MSEC)
-    trigger_piston()
-    wait(100, MSEC) #turns piston twice
-
+     trigger_piston() #turns toggle twice
+     wait(500, MSEC)
+     trigger_piston()
+     wait(100, MSEC)
+     moveF(55)
+     turn_to(-100)
+     moveB(55)
+     trigger_piston() #turns toggle twice
+     wait(500, MSEC)
+     trigger_piston()
+     wait(100, MSEC)
+   
+ 
 def driver_control():
     for m in motors:
         m.set_stopping(COAST)
