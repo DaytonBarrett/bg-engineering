@@ -10,7 +10,6 @@ brain=Brain()
 inertial_11 = Inertial(Ports.PORT11)
 piston = DigitalOut(brain.three_wire_port.a)
 
-
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
@@ -160,31 +159,41 @@ def moveBR(inches, angle=135, speed=60):#Move backward
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
 
-def turn_to(target, speed=60, timeout=2.0):
-#Turn to a specific heading with a max speed of 60 with max time being 2 seconds
-    """Clockwise positive."""
-    end = brain.timer.time(SECONDS) + timeout
- 
-    while brain.timer.time(SECONDS) < end:
-        error = target - imu.heading(DEGREES)
- 
-        if abs(error) < 1.5:     # close enough, stop
-            break
- 
-        speed = max(-60, min(60, speed))   # cap top speed
-        if abs(speed) < 8:                               # minimum so it doesn't stall
-            speed = 8 if speed > 0 else -8
- 
-        # Positive speed turns clockwise (right), negative turns left
-        fl.spin(FORWARD,  speed, PERCENT)
-        fr.spin(FORWARD, -speed, PERCENT)
-        bl.spin(FORWARD,  speed, PERCENT)
-        br.spin(FORWARD, -speed, PERCENT)
-        wait(10, MSEC)
+def turn_right_to(target, speed=60):
+    """Clockwise right/positive."""
+    h = target - 0.25 
+    j = target + 0.25
+
+    #adds buffer window
+    
+    fl.spin(FORWARD,  speed, PERCENT)
+    fr.spin(FORWARD, -speed, PERCENT)
+    bl.spin(FORWARD,  speed, PERCENT)
+    br.spin(FORWARD, -speed, PERCENT)
+
+    while current_heading < h and current_heading > j:
+
+        wait(.01, SECONDS)
  
     for m in motors:
         m.stop()
 
+def turn_left_to(target, speed=60, timeout=2.0):
+    """Counter-Clockwise left/negative."""
+    h = target - 0.25 
+    j = target + 0.25
+    
+    fl.spin(REVERSE,  speed, PERCENT)
+    fr.spin(REVERSE, -speed, PERCENT)
+    bl.spin(REVERSE,  speed, PERCENT)
+    br.spin(REVERSE, -speed, PERCENT)
+
+    while current_heading < h and current_heading > j:
+
+        wait(.01,SECONDS)
+ 
+    for m in motors:
+        m.stop()
 
 def autonomous():
      for m in motors:
@@ -196,7 +205,7 @@ def autonomous():
     wait(100, MSEC)
     moveF(35) #Moves to between the two cones 
     moveFR(20) #moves towards right toggle between the other code
-    turn_to(220)  #orrients the piston to face the other toggle
+    turn_to_right(220)  #orrients the piston to face the other toggle
     moveB(35) #Moves back to other toggle
     trigger_piston()
     wait(500, MSEC)
