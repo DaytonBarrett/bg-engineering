@@ -23,6 +23,7 @@ def initializeRandomSeed():
 # Set random seed 
 initializeRandomSeed()
 
+current_heading = Inertial.heading(DEGREES)
 
 def play_vexcode_sound(sound_name):
     # Helper to make playing sounds from the V5 in VEXcode easier and
@@ -205,7 +206,7 @@ def autonomous():
     wait(100, MSEC)
     moveF(35) #Moves to between the two cones 
     moveFR(20) #moves towards right toggle between the other code
-    turn_to_right(220)  #orrients the piston to face the other toggle
+    turn_right_to(220)  #orrients the piston to face the other toggle
     moveB(35) #Moves back to other toggle
     trigger_piston()
     wait(500, MSEC)
