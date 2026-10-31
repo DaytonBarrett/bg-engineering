@@ -211,13 +211,16 @@ def autonomous():
      wait(500, MSEC)
      trigger_piston()
      wait(100, MSEC)
-     moveF(55)
-     turn_to(-100)
-     moveB(55)
+     moveF(54)
+     turn_to(-95)
+     moveB(65)
+     wait(500, MSEC)
      trigger_piston() #turns toggle twice
      wait(500, MSEC)
      trigger_piston()
      wait(100, MSEC)
+     turn_to(-90)
+     moveF(55)
    
  
 def driver_control():
