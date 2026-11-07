@@ -7,6 +7,10 @@ import math
 brain=Brain()
 
 # Robot configuration code
+motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True) #cascade back motor
+motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False) #cascade front motor
+cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
+claw = DigitalOut(brain.three_wire_port.b)
 inertial_11 = Inertial(Ports.PORT11)
 piston = DigitalOut(brain.three_wire_port.a)
 
@@ -221,14 +225,21 @@ def autonomous():
      wait(100, MSEC)
      turn_to(-90)
      moveF(55)
-   
  
 def driver_control():
     for m in motors:
         m.set_stopping(COAST)
     while True:
-        drive(stick(controller.axis3), stick(controller.axis4),
+        drive(-stick(controller.axis4), stick(controller.axis3),
               stick(controller.axis1) * TURN_SENSITIVITY)
+
+        if controller.buttonR2.pressing():
+            cascade.spin(FORWARD)
+        elif controller.buttonL2.pressing():
+            cascade.spin(REVERSE)
+        else:
+            cascade.stop(HOLD)
+
         wait(10, MSEC)
 
 def trigger_piston():
@@ -244,3 +255,13 @@ def trigger_piston():
 controller.buttonR1.pressed(trigger_piston)
 
 competition = Competition(driver_control, autonomous)
+
+def claw_close():
+    claw.set(True)
+pass
+controller.buttonL1.pressed(claw_close)
+
+def claw_open():
+    claw.set(False)
+pass
+controller.buttonDown.pressed(claw_open)
