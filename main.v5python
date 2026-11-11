@@ -207,6 +207,7 @@ def turn_right_to(target, speed=60):
 def turn_left_to(target, speed=60):
     turn_to(target, max_speed=speed)
 
+
 def autonomous():
      for m in motors:
         m.set_stopping(HOLD)
@@ -215,16 +216,11 @@ def autonomous():
      wait(500, MSEC)
      trigger_piston()
      wait(100, MSEC)
-     moveF(54)
-     turn_to(-95)
-     moveB(65)
-     wait(500, MSEC)
-     trigger_piston() #turns toggle twice
-     wait(500, MSEC)
-     trigger_piston()
-     wait(100, MSEC)
-     turn_to(-90)
-     moveF(55)
+     moveF(5)
+     turn_to(290)
+     moveF(15)
+     claw.set(False)
+
  
 def driver_control():
     for m in motors:
