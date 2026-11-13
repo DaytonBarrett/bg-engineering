@@ -7,12 +7,7 @@ import math
 brain=Brain()
 
 # Robot configuration code
-motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True) #cascade back motor
-motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False) #cascade front motor
-cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
-claw = DigitalOut(brain.three_wire_port.b)
-inertial_11 = Inertial(Ports.PORT11)
-piston = DigitalOut(brain.three_wire_port.a)
+
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -27,7 +22,6 @@ def initializeRandomSeed():
 # Set random seed 
 initializeRandomSeed()
 
-current_heading = Inertial.heading(DEGREES)
 
 def play_vexcode_sound(sound_name):
     # Helper to make playing sounds from the V5 in VEXcode easier and
@@ -208,6 +202,25 @@ def turn_left_to(target, speed=60):
     turn_to(target, max_speed=speed)
 
 
+# ---- Auton helpers: Cascade(Up, 12) and Claw(Close) ----
+CASCADE_IN_PER_REV = 4.0   # inches the cascade rises per motor revolution: measure this
+Up    = 1
+Down  = -1
+Open  = 0
+Close = 1
+
+def Cascade(direction, inches, speed=100):
+    """Cascade(Up, 12) raises 12 in, Cascade(Down, 12) lowers 12 in."""
+    degs = inches / CASCADE_IN_PER_REV * 360 * direction
+    cascade.spin_for(FORWARD, degs, DEGREES, speed, PERCENT)  # waits until finished
+    cascade.stop(HOLD)
+
+def Claw(state, delay=250):
+    """Claw(Close) closes, Claw(Open) opens. delay = ms to let the claw finish moving."""
+    claw.set(state == Close)
+    wait(delay, MSEC)
+
+
 def autonomous():
      for m in motors:
         m.set_stopping(HOLD)
@@ -217,9 +230,11 @@ def autonomous():
      trigger_piston()
      wait(100, MSEC)
      moveF(5)
-     turn_to(290)
+     turn_to(325)
      moveF(15)
-     claw.set(False)
+     Claw(Open)
+     Cascade(Up, 9)
+     Cascade(Down, 9)
 
  
 def driver_control():
@@ -261,3 +276,4 @@ def claw_open():
     claw.set(False)
 pass
 controller.buttonDown.pressed(claw_open)
+
