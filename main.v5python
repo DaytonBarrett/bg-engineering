@@ -101,56 +101,56 @@ def move_wheels(wheel_inches, speed):
         m.stop()
 
 
-def moveF(inches, angle=0, speed=60): #Move Foward
+def moveF(inches, angle=0, speed=85): #Move Foward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveR(inches, angle=90, speed=60):#Move right
+def moveR(inches, angle=90, speed=85):#Move right
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveL(inches, angle=-90, speed=60):#Move left
+def moveL(inches, angle=-90, speed=85):#Move left
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveB(inches, angle=-180, speed=60):#Move backward
+def moveB(inches, angle=-180, speed=85):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFL(inches, angle=-45, speed=60):#Move backward
+def moveFL(inches, angle=-45, speed=85):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFR(inches, angle=45, speed=60):#Move backward
+def moveFR(inches, angle=45, speed=85):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBL(inches, angle=-135, speed=60):#Move backward
+def moveBL(inches, angle=-135, speed=85):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBR(inches, angle=135, speed=60):#Move backward
+def moveBR(inches, angle=135, speed=85):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -162,7 +162,7 @@ def angle_error(target, current):
     """Shortest signed error in degrees, range -180 to 180. Positive = need to turn right."""
     return (target - current + 180) % 360 - 180
 
-def turn_to(target, max_speed=60, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.0):
+def turn_to(target, max_speed=85, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.0):
     timer = Timer()
     timer.reset()
     settled = 0
@@ -195,10 +195,10 @@ def turn_to(target, max_speed=60, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.
     for m in motors:
         m.stop(BRAKE)
 
-def turn_right_to(target, speed=60):
+def turn_right_to(target, speed=85):
     turn_to(target, max_speed=speed)
 
-def turn_left_to(target, speed=60):
+def turn_left_to(target, speed=85):
     turn_to(target, max_speed=speed)
 
 
