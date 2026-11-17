@@ -42,6 +42,14 @@ import math
 brain = Brain()
 controller = Controller(PRIMARY)
 
+# Robot configuration code
+motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True) #cascade back motor
+motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False) #cascade front motor
+cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
+claw = DigitalOut(brain.three_wire_port.b)
+inertial_11 = Inertial(Ports.PORT11)
+piston = DigitalOut(brain.three_wire_port.a)
+
 # One 36->60 gear mesh reverses rotation, so the left side is reversed here.
 # Push the left stick forward on blocks; flip any wheel that fights the others.
 fl = Motor(Ports.PORT1, GearSetting.RATIO_6_1, True)
@@ -101,56 +109,56 @@ def move_wheels(wheel_inches, speed):
         m.stop()
 
 
-def moveF(inches, angle=0, speed=85): #Move Foward
+def moveF(inches, angle=0, speed=60): #Move Foward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveR(inches, angle=90, speed=85):#Move right
+def moveR(inches, angle=90, speed=60):#Move right
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveL(inches, angle=-90, speed=85):#Move left
+def moveL(inches, angle=-90, speed=60):#Move left
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveB(inches, angle=-180, speed=85):#Move backward
+def moveB(inches, angle=-180, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFL(inches, angle=-45, speed=85):#Move backward
+def moveFL(inches, angle=-45, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFR(inches, angle=45, speed=85):#Move backward
+def moveFR(inches, angle=45, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBL(inches, angle=-135, speed=85):#Move backward
+def moveBL(inches, angle=-135, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveBR(inches, angle=135, speed=85):#Move backward
+def moveBR(inches, angle=135, speed=60):#Move backward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -162,7 +170,7 @@ def angle_error(target, current):
     """Shortest signed error in degrees, range -180 to 180. Positive = need to turn right."""
     return (target - current + 180) % 360 - 180
 
-def turn_to(target, max_speed=85, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.0):
+def turn_to(target, max_speed=60, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.0):
     timer = Timer()
     timer.reset()
     settled = 0
@@ -195,14 +203,14 @@ def turn_to(target, max_speed=85, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.
     for m in motors:
         m.stop(BRAKE)
 
-def turn_right_to(target, speed=85):
+def turn_right_to(target, speed=60):
     turn_to(target, max_speed=speed)
 
-def turn_left_to(target, speed=85):
+def turn_left_to(target, speed=60):
     turn_to(target, max_speed=speed)
 
 
-# ---- Auton helpers: Cascade(Up, 12) and Claw(Close) ----
+#Auton helpers: Cascade(Up, 12) and Claw(Close)
 CASCADE_IN_PER_REV = 4.0   # inches the cascade rises per motor revolution: measure this
 Up    = 1
 Down  = -1
@@ -212,12 +220,12 @@ Close = 1
 def Cascade(direction, inches, speed=100):
     """Cascade(Up, 12) raises 12 in, Cascade(Down, 12) lowers 12 in."""
     degs = inches / CASCADE_IN_PER_REV * 360 * direction
-    cascade.spin_for(FORWARD, degs, DEGREES, speed, PERCENT)  # waits until finished
+    cascade.spin_for(FORWARD, degs, DEGREES, speed, PERCENT) # waits until finished
     cascade.stop(HOLD)
 
 def Claw(state, delay=250):
     """Claw(Close) closes, Claw(Open) opens. delay = ms to let the claw finish moving."""
-    claw.set(state == Close)
+    claw.set(state == Open)
     wait(delay, MSEC)
 
 
@@ -225,16 +233,21 @@ def autonomous():
      for m in motors:
         m.set_stopping(HOLD)
         imu.set_heading(0, DEGREES)
+     Claw(Close, 50)
      trigger_piston() #turns toggle twice
      wait(500, MSEC)
      trigger_piston()
      wait(100, MSEC)
-     moveF(5)
-     turn_to(325)
-     moveF(15)
-     Claw(Open)
-     Cascade(Up, 9)
-     Cascade(Down, 9)
+     moveF(13)
+     Cascade(Up, 2.9)
+     turn_to(200)
+     moveR(29)
+     wait(100,MSEC)
+     Claw(Open, 250)
+     moveL(20)
+     moveB(30)
+
+
 
  
 def driver_control():
@@ -271,6 +284,12 @@ def claw_close():
     claw.set(True)
 pass
 controller.buttonL1.pressed(claw_close)
+
+def claw_open():
+    claw.set(False)
+pass
+controller.buttonDown.pressed(claw_open)
+
 
 def claw_open():
     claw.set(False)
