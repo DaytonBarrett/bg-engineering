@@ -123,7 +123,7 @@ def moveR(inches, angle=90, speed=60):#Move right
     r = inches * math.sin(a) / math.sqrt(2)
     move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveRS(inches, angle=90, speed=30):#Move right Slow
+def moveRS(inches, angle=90, speed=10):#Move right Slow
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -244,19 +244,22 @@ def autonomous():
      wait(500, MSEC)
      trigger_piston()
      wait(100, MSEC)
-     moveF(13)
-     Cascade(Up, 2.9)
+     moveF(15.5)
+     Cascade(Up, 3.9)
      turn_to(200)
      moveR(29)
      wait(100,MSEC)
      Claw(Open, 250)
-     moveL(5.2)
-     moveB(22)
-     moveRS(11.2)
+     moveL(6)
+     moveB(24)
+     moveRS(8)
      Claw(Close, 250)
      Cascade(Up, 6)
-     turn_to(45)
-     moveR(30)
+     turn_to(320)
+     moveF(2)
+     moveR(16)
+     moveF(9)
+     moveR(16)
      Claw(Open, 250)
      moveL(3)
      Cascade(Down, 8.9)
@@ -303,4 +306,3 @@ def claw_open():
     claw.set(False)
 pass
 controller.buttonDown.pressed(claw_open)
-
