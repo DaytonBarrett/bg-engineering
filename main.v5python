@@ -7,6 +7,7 @@ import math
 brain=Brain()
 
 # Robot configuration code
+digital_out_a = DigitalOut(brain.three_wire_port.a)
 
 
 # wait for rotation sensor to fully initialize
@@ -59,26 +60,82 @@ br = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 motors = [fl, fr, bl, br]
 
 imu = Inertial(Ports.PORT11)
+vert = Rotation(Ports.PORT17, False) #pls plug into port 17 or else change this number
+horiz = Rotation(ports.Port18, False) #same for this
 
 WHEEL_DIAMETER_IN  = 2.75      # 2.75 for the smaller omnis
 GEAR_RATIO         = 60/36   # motor turns per wheel turn
 CENTER_TO_WHEEL_IN = 7.0       # robot center to wheel contact: measure this
 DEADBAND           = 0.05
 TURN_SENSITIVITY   = 0.85
-SLEW               = 1.2       # max volts gained per 10 ms loop (~0.1 s to full power)
+S_V = 0.0 #change both of these cuz this is basically our offset from the turning center, so measure this on the robot
+S_H = 0.0 
+SLEW = 1.2       # max volts gained per 10 ms loop (~0.1 s to full power)
 
 volts = [0.0, 0.0, 0.0, 0.0]   # last voltage sent to each motor
+
+class Pose: #stores position in this class so it can update and we know exactly where it is
+    def _init_(self):
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0
+pose = Pose()
+
+#---- The Odomotetry Loop: this is where the magic happens ---- (and yes I am using 4 dashes in spite of tyler & brett)
+
+def odom_loop():                    #function runs forever in the background
+    prev_v = vert.position(TURNS) * IN_PER_TURN     #starting distance of vertical wheel (in inches)
+    prev_h = horiz.position(TURNS) * IN_PER_TURN    #same thing but for horizontal (inches)
+    prev_t = math.radians(imu.rotation(DEGREES))    #starting heading
+
+    while True:     #this is going like 100 times per second btw
+
+    # ---- Read Sensors ---- (hahah I used the 4 dashes again with proper capitlization and you can't stop me >:)
+    v = vert.position(TURNS) * IN_PER_TURN      #total inches rolled so far vertical
+    h = horiz.position(TURNS) * IN_PER_TURN     #total inches rolled so far horizontal
+    t = math.radians(imu.rotation(DEGREES)) #same ting but for heading
+
+    # ---- How much did it change (hint, not enough) ---- (hahah try and stop me im using 4 dashes you cant cuz im evil)
+    dv, dh, dt = v - prev_h, t - prev_t     #changes in vertical wheel. also look at me im flexing my calc knowledge on yall
+    prev_v, prev_h, prev_t = v, h, t        #save current readings so the next loop can analyze the change in THEM
+
+    # --- Movement relative to robot --- (Im gonna do 3 dashes on this one to make whoever is actually reading this mad)
+    if abs(dt) <le-6        #if true, means robot didn't turn, and basically stops us from dividing by 0
+        lx, ly = dh, dv     #dont turn only move horizontally and vertically
+    else:
+        chord = 2 * math.sin(dt / 2)    #chord formula: length = 2*radius*sin(angle/2)
+        lx = chord * (dh / dt + S_H)    #dh/dt = Wheel's arc radius +S_H shifts it to the robots center radius
+        ly = chord * (dv / dt +S_V)
+    
+    # --- Rotate robot-relative movement onto FIELD ----  (haha now look the dashes r uneven and you can do nada)
+    avg = t - dt / 2 #average heading during step
+    pose.x += lx * math.cos(avg) + ly * math.sin(avg) #adds this steps movement to field x
+    pose.y += lx * math.cos(avg) + ly * math.sin(avg) #same for y
+    pose.theta = t
+
+    wait(10, MSEC) #Pause 10 MS, and run it again
 
 brain.screen.print("Are you Ready, yea you are")
 imu.calibrate()
 while imu.is_calibrating():
     wait(50,MSEC)
-
+vert.reset.position()
+horiz.reset.position()
+Thread(odom_loop) #starts running odom_loop in the background
 
 def stick(axis):
     x = axis.position() / 100
     return 0.0 if abs(x) < DEADBAND else x
 
+#GUYS WE ARE ADDING A DEBUG DISPLAY IDK HOW WE DIDNT THINK OF THIS SOONER
+
+while True:
+    brain.screen.clear_screen()
+    brain.screen.set_cursor(1, 1)
+    brain.screen.print("X: %.1f Y: %1f H: 1f" %
+                        (pose.x, pose.y
+                        math.degrees(pose.theta)))
+wait(100, MSEC)
 
 def drive(forward, strafe, turn):
     powers = [forward + strafe + turn, forward - strafe - turn,
@@ -177,7 +234,7 @@ def angle_error(target, current):
     """Shortest signed error in degrees, range -180 to 180. Positive = need to turn right."""
     return (target - current + 180) % 360 - 180
 
-def turn_to(target, max_speed=60, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.0):
+def turn_to(target, max_speed=60, min_speed=8, kp=0.8, tolerance=1.0, timeout=5):
     timer = Timer()
     timer.reset()
     settled = 0
@@ -244,24 +301,24 @@ def autonomous():
      wait(500, MSEC)
      trigger_piston()
      wait(100, MSEC)
-     moveF(15.5)
+     moveF(14.8)
      Cascade(Up, 3.9)
      turn_to(200)
      moveR(29)
      wait(100,MSEC)
      Claw(Open, 250)
-     moveL(6)
-     moveB(24)
-     moveRS(8)
+     moveL(8)
+     moveB(22)
+     moveRS(10)
      Claw(Close, 250)
      Cascade(Up, 6)
-     turn_to(320)
-     moveF(2)
+     turn_to(310)
+     moveF(6)
      moveR(16)
-     moveF(9)
+     moveF(7)
      moveR(16)
      Claw(Open, 250)
-     moveL(3)
+     moveL(5)
      Cascade(Down, 8.9)
 
 
