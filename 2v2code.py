@@ -1,0 +1,308 @@
+#region VEXcode Generated Robot Configuration
+from vex import *
+import urandom
+import math
+
+# Brain should be defined by default
+brain=Brain()
+
+# Robot configuration code
+
+
+# wait for rotation sensor to fully initialize
+wait(30, MSEC)
+
+
+# Make random actually random
+def initializeRandomSeed():
+    wait(100, MSEC)
+    random = brain.battery.voltage(MV) + brain.battery.current(CurrentUnits.AMP) * 100 + brain.timer.system_high_res()
+    urandom.seed(int(random))
+      
+# Set random seed 
+initializeRandomSeed()
+
+
+def play_vexcode_sound(sound_name):
+    # Helper to make playing sounds from the V5 in VEXcode easier and
+    # keeps the code cleaner by making it clear what is happening.
+    print("VEXPlaySound:" + sound_name)
+    wait(5, MSEC)
+
+# add a small delay to make sure we don't print in the middle of the REPL header
+wait(200, MSEC)
+# clear the console to make sure we don't have the REPL in the console
+print("\033[2J")
+
+#endregion VEXcode Generated Robot Configuration
+# X-Drive | VEX V5 Python | omni wheels, blue 600 RPM cartridges, 36:60 reduction
+from vex import *
+import math
+
+brain = Brain()
+controller = Controller(PRIMARY)
+
+# Robot configuration code
+motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True) #cascade back motor
+motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False) #cascade front motor
+cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
+claw = DigitalOut(brain.three_wire_port.b)
+inertial_11 = Inertial(Ports.PORT11)
+piston = DigitalOut(brain.three_wire_port.a)
+
+# One 36->60 gear mesh reverses rotation, so the left side is reversed here.
+# Push the left stick forward on blocks; flip any wheel that fights the others.
+fl = Motor(Ports.PORT1, GearSetting.RATIO_6_1, True)
+fr = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
+bl = Motor(Ports.PORT3, GearSetting.RATIO_6_1, True)
+br = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
+motors = [fl, fr, bl, br]
+
+imu = Inertial(Ports.PORT11)
+
+WHEEL_DIAMETER_IN  = 2.75      # 2.75 for the smaller omnis
+GEAR_RATIO         = 60/36   # motor turns per wheel turn
+CENTER_TO_WHEEL_IN = 7.0       # robot center to wheel contact: measure this
+DEADBAND           = 0.05
+TURN_SENSITIVITY   = 0.85
+SLEW               = 1.2       # max volts gained per 10 ms loop (~0.1 s to full power)
+
+volts = [0.0, 0.0, 0.0, 0.0]   # last voltage sent to each motor
+
+brain.screen.print("Are you Ready, yea you are")
+imu.calibrate()
+while imu.is_calibrating():
+    wait(50,MSEC)
+
+
+def stick(axis):
+    x = axis.position() / 100
+    return 0.0 if abs(x) < DEADBAND else x
+
+
+def drive(forward, strafe, turn):
+    powers = [forward + strafe + turn, forward - strafe - turn,
+              forward - strafe + turn, forward + strafe - turn]
+    peak = max(1.0, max(abs(p) for p in powers))  # scale together, never clip
+    for i in range(4):
+        target = 12.0 * powers[i] / peak
+        last = 0.0 if volts[i] * target < 0 else volts[i]  # reversing: ramp from 0
+        if abs(target) > abs(last):                         # only ramp speed-ups
+            target = last + max(-SLEW, min(SLEW, target - last))
+        volts[i] = target
+        motors[i].spin(FORWARD, target, VoltageUnits.VOLT)
+
+
+def move_wheels(wheel_inches, speed):
+    degs = [x / (math.pi * WHEEL_DIAMETER_IN) * 360 * GEAR_RATIO for x in wheel_inches]
+    longest = max(abs(d) for d in degs)
+    if longest < 1:
+        return
+    for m, d in zip(motors, degs):
+        m.set_velocity(max(1, speed * abs(d) / longest), PERCENT)  # all finish together
+        m.spin_for(FORWARD, d, DEGREES, wait=False)
+    # Stop if blocked, so a pinned robot doesn't sit at stall current.
+    limit = brain.timer.time(SECONDS) + 1.5 * longest / (speed * 36) + 1
+    while not all(m.is_done() for m in motors) and brain.timer.time(SECONDS) < limit:
+        wait(10, MSEC)
+    for m in motors:
+        m.stop()
+
+
+def moveF(inches, angle=0, speed=60): #Move Foward
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+def moveR(inches, angle=90, speed=60):#Move right
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+def moveRS(inches, angle=90, speed=10):#Move right Slow
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+def moveL(inches, angle=-90, speed=60):#Move left
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+def moveB(inches, angle=-180, speed=60):#Move backward
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+def moveFL(inches, angle=-45, speed=60):#Move backward
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+def moveFR(inches, angle=45, speed=60):#Move backward
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+def moveBL(inches, angle=-135, speed=60):#Move backward
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+def moveBR(inches, angle=135, speed=60):#Move backward
+    """angle: 0 forward, 90 right, 180 back, -90 left."""
+    a = angle * math.pi / 180
+    f = inches * math.cos(a) / math.sqrt(2)
+    r = inches * math.sin(a) / math.sqrt(2)
+    move_wheels([f + r, f - r, f - r, f + r], speed)
+
+
+def angle_error(target, current):
+    """Shortest signed error in degrees, range -180 to 180. Positive = need to turn right."""
+    return (target - current + 180) % 360 - 180
+
+def turn_to(target, max_speed=60, min_speed=8, kp=0.8, tolerance=1.0, timeout=2.0):
+    timer = Timer()
+    timer.reset()
+    settled = 0
+
+    while timer.time(SECONDS) < timeout:
+        error = angle_error(target, imu.heading(DEGREES))
+
+        if abs(error) <= tolerance:
+            settled += 1
+            if settled >= 5:        # in tolerance for ~50 ms, so it's actually stopped
+                break
+        else:
+            settled = 0
+
+        speed = kp * error
+        # clamp speed, keeping enough power to overcome friction
+        if abs(speed) > max_speed:
+            speed = max_speed if speed > 0 else -max_speed
+        elif abs(speed) < min_speed and abs(error) > tolerance:
+            speed = min_speed if speed > 0 else -min_speed
+
+        # positive speed = clockwise (same pattern as your turn_right_to)
+        fl.spin(FORWARD,  speed, PERCENT)
+        fr.spin(FORWARD, -speed, PERCENT)
+        bl.spin(FORWARD,  speed, PERCENT)
+        br.spin(FORWARD, -speed, PERCENT)
+
+        wait(10, MSEC)
+
+    for m in motors:
+        m.stop(BRAKE)
+
+def turn_right_to(target, speed=60):
+    turn_to(target, max_speed=speed)
+
+def turn_left_to(target, speed=60):
+    turn_to(target, max_speed=speed)
+
+
+CASCADE_IN_PER_REV = 4.0   # inches the cascade rises per motor revolution: measure this
+Up    = 1
+Down  = -1
+Open  = 0
+Close = 1
+
+def Cascade(direction, inches, speed=100):
+    """Cascade(Up, 12) raises 12 in, Cascade(Down, 12) lowers 12 in."""
+    degs = inches / CASCADE_IN_PER_REV * 360 * direction
+    cascade.spin_for(FORWARD, degs, DEGREES, speed, PERCENT) # waits until finished
+    cascade.stop(HOLD)
+
+def Claw(state, delay=250):
+    """Claw(Close) closes, Claw(Open) opens. delay = ms to let the claw finish moving."""
+    claw.set(state == Open)
+    wait(delay, MSEC)
+
+
+def autonomous():
+     for m in motors:
+        m.set_stopping(HOLD)
+        imu.set_heading(0, DEGREES)
+     Claw(Close, 50)
+     trigger_piston() #turns toggle twice
+     wait(500, MSEC)
+     trigger_piston()
+     wait(100, MSEC)
+     moveF(15.5)
+     Cascade(Up, 3.9)
+     turn_to(200)
+     moveR(29)
+     wait(100,MSEC)
+     Claw(Open, 250)
+     moveL(6)
+     moveB(24)
+     moveRS(8)
+     Claw(Close, 250)
+     Cascade(Up, 6)
+     turn_to(320)
+     moveF(2)
+     moveR(16)
+     moveF(9)
+     moveR(16)
+     Claw(Open, 250)
+     moveL(3)
+     Cascade(Down, 8.9)
+
+
+
+ 
+def driver_control():
+    for m in motors:
+        m.set_stopping(COAST)
+    while True:
+        drive(-stick(controller.axis4), stick(controller.axis3),
+              stick(controller.axis1) * TURN_SENSITIVITY)
+
+        if controller.buttonR2.pressing():
+            cascade.spin(FORWARD)
+        elif controller.buttonL2.pressing():
+            cascade.spin(REVERSE)
+        else:
+            cascade.stop(HOLD)
+
+        wait(10, MSEC)
+
+def trigger_piston():
+    # 1. Push the piston out (Extend)
+    piston.set(True)
+    
+    # 2. Briefly wait for the air pressure to fully push the cylinder out
+    wait(150, MSEC) 
+    
+    # 3. Immediately pull the piston back in (Retract)
+    piston.set(False)
+
+controller.buttonR1.pressed(trigger_piston)
+
+competition = Competition(driver_control, autonomous)
+
+def claw_close():
+    claw.set(True)
+pass
+controller.buttonL1.pressed(claw_close)
+
+def claw_open():
+    claw.set(False)
+pass
+controller.buttonDown.pressed(claw_open)
