@@ -43,8 +43,8 @@ brain = Brain()
 controller = Controller(PRIMARY)
 
 # Robot configuration code
-motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True) #cascade back motor
-motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False) #cascade front motor
+motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False) #cascade back motor
+motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, True) #cascade front motor
 cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
 claw = DigitalOut(brain.three_wire_port.b)
 inertial_11 = Inertial(Ports.PORT11)
