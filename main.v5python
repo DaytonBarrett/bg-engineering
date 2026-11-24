@@ -178,7 +178,7 @@ def set_drive(fwd, strafe, turn):                      # Send forward, sideways,
     br.spin(FORWARD, fwd + strafe - turn, PERCENT)     # Back-right wheel (same mixing as driver control)
 
 def stop_drive():                                      # Stop all four drive motors
-    for m in (fl, fr, bl, fr):                         # Go through each motor...
+    for m in (fl, fr, bl, br):                         # Go through each motor...
         m.stop(BRAKE)                                  # ...and brake it so the robot doesn't coast
 
 def angle_diff(target_deg, current_deg):               # Shortest way to turn from current to target, in degrees
@@ -302,8 +302,8 @@ def autonomous():
      for m in motors:
         m.set_stopping(HOLD)
         imu.set_heading(0, DEGREES)
-        drive_straight(12)
-        strafe(12)
+     drive_straight(12)
+     strafe(12)
 
 
 
