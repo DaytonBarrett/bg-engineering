@@ -13,7 +13,6 @@ digital_out_a = DigitalOut(brain.three_wire_port.a)
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
 
-
 # Make random actually random
 def initializeRandomSeed():
     wait(100, MSEC)
@@ -44,9 +43,9 @@ brain = Brain()
 controller = Controller(PRIMARY)
 
 # Robot configuration code
-motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True) #cascade back motor
-motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False) #cascade front motor
-cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
+#motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True) #cascade back motor
+#motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False) #cascade front motor
+#cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
 claw = DigitalOut(brain.three_wire_port.b)
 inertial_11 = Inertial(Ports.PORT11)
 piston = DigitalOut(brain.three_wire_port.a)
@@ -60,8 +59,8 @@ br = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
 motors = [fl, fr, bl, br]
 
 imu = Inertial(Ports.PORT11)
-vert = Rotation(Ports.PORT17, False) #pls plug into port 17 or else change this number
-horiz = Rotation(ports.Port18, False) #same for this
+vert = Rotation(Ports.PORT5, False) #pls plug into port 17 or else change this number
+horiz = Rotation(Ports.PORT6, False) #same for this
 
 WHEEL_DIAMETER_IN  = 2.75      # 2.75 for the smaller omnis
 GEAR_RATIO         = 60/36   # motor turns per wheel turn
@@ -71,11 +70,13 @@ TURN_SENSITIVITY   = 0.85
 S_V = 0.0 #change both of these cuz this is basically our offset from the turning center, so measure this on the robot
 S_H = 0.0 
 SLEW = 1.2       # max volts gained per 10 ms loop (~0.1 s to full power)
+TRACKING_WHEEL_DIAMETER_IN = 2.0   # diameter of the odom tracking wheels: measure this
+IN_PER_TURN = math.pi * TRACKING_WHEEL_DIAMETER_IN   # inches rolled per tracking wheel turn
 
 volts = [0.0, 0.0, 0.0, 0.0]   # last voltage sent to each motor
 
 class Pose: #stores position in this class so it can update and we know exactly where it is
-    def _init_(self):
+    def __init__(self):
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
@@ -91,36 +92,36 @@ def odom_loop():                    #function runs forever in the background
     while True:     #this is going like 100 times per second btw
 
     # ---- Read Sensors ---- (hahah I used the 4 dashes again with proper capitlization and you can't stop me >:)
-    v = vert.position(TURNS) * IN_PER_TURN      #total inches rolled so far vertical
-    h = horiz.position(TURNS) * IN_PER_TURN     #total inches rolled so far horizontal
-    t = math.radians(imu.rotation(DEGREES)) #same ting but for heading
+        v = vert.position(TURNS) * IN_PER_TURN      #total inches rolled so far vertical
+        h = horiz.position(TURNS) * IN_PER_TURN     #total inches rolled so far horizontal
+        t = math.radians(imu.rotation(DEGREES)) #same ting but for heading
 
     # ---- How much did it change (hint, not enough) ---- (hahah try and stop me im using 4 dashes you cant cuz im evil)
-    dv, dh, dt = v - prev_h, t - prev_t     #changes in vertical wheel. also look at me im flexing my calc knowledge on yall
-    prev_v, prev_h, prev_t = v, h, t        #save current readings so the next loop can analyze the change in THEM
+        dv, dh, dt = v - prev_v, h - prev_h, t - prev_t    #changes in vertical wheel. also look at me im flexing my calc knowledge on yall
+        prev_v, prev_h, prev_t = v, h, t        #save current readings so the next loop can analyze the change in THEM
 
     # --- Movement relative to robot --- (Im gonna do 3 dashes on this one to make whoever is actually reading this mad)
-    if abs(dt) <le-6        #if true, means robot didn't turn, and basically stops us from dividing by 0
-        lx, ly = dh, dv     #dont turn only move horizontally and vertically
-    else:
-        chord = 2 * math.sin(dt / 2)    #chord formula: length = 2*radius*sin(angle/2)
-        lx = chord * (dh / dt + S_H)    #dh/dt = Wheel's arc radius +S_H shifts it to the robots center radius
-        ly = chord * (dv / dt +S_V)
+        if abs(dt) < 1e-6:        #if true, means robot didn't turn, and basically stops us from dividing by 0
+            lx, ly = dh, dv     #dont turn only move horizontally and vertically
+        else:
+            chord = 2 * math.sin(dt / 2)    #chord formula: length = 2*radius*sin(angle/2)
+            lx = chord * (dh / dt + S_H)    #dh/dt = Wheel's arc radius +S_H shifts it to the robots center radius
+            ly = chord * (dv / dt +S_V)
     
     # --- Rotate robot-relative movement onto FIELD ----  (haha now look the dashes r uneven and you can do nada)
-    avg = t - dt / 2 #average heading during step
-    pose.x += lx * math.cos(avg) + ly * math.sin(avg) #adds this steps movement to field x
-    pose.y += lx * math.cos(avg) + ly * math.sin(avg) #same for y
-    pose.theta = t
+        avg = t - dt / 2 #average heading during step
+        pose.x += lx * math.cos(avg) + ly * math.sin(avg) #adds this steps movement to field x
+        pose.y += -lx * math.sin(avg) + ly * math.cos(avg) #same for y
+        pose.theta = t
 
-    wait(10, MSEC) #Pause 10 MS, and run it again
+        wait(10, MSEC) #Pause 10 MS, and run it again
 
 brain.screen.print("Are you Ready, yea you are")
 imu.calibrate()
 while imu.is_calibrating():
     wait(50,MSEC)
-vert.reset.position()
-horiz.reset.position()
+vert.reset_position()
+horiz.reset_position()
 Thread(odom_loop) #starts running odom_loop in the background
 
 def stick(axis):
@@ -129,13 +130,16 @@ def stick(axis):
 
 #GUYS WE ARE ADDING A DEBUG DISPLAY IDK HOW WE DIDNT THINK OF THIS SOONER
 
-while True:
-    brain.screen.clear_screen()
-    brain.screen.set_cursor(1, 1)
-    brain.screen.print("X: %.1f Y: %1f H: 1f" %
-                        (pose.x, pose.y
-                        math.degrees(pose.theta)))
-wait(100, MSEC)
+def screenprintloop():
+    while True:
+        brain.screen.clear_screen()
+        brain.screen.set_cursor(1, 1)
+        brain.screen.print("X: %.1f Y: %.1f H: %.1f" %
+                            (pose.x, pose.y,
+                            math.degrees(pose.theta)))
+        wait(100, MSEC)
+
+Thread(screenprintloop) #starts running screenprintloop in background
 
 def drive(forward, strafe, turn):
     powers = [forward + strafe + turn, forward - strafe - turn,
@@ -164,70 +168,71 @@ def move_wheels(wheel_inches, speed):
         wait(10, MSEC)
     for m in motors:
         m.stop()
+def clamp(value, limit):                               # Keep a number between -limit and +limit
+    return max(-limit, min(limit, value))              # Smaller of (value, limit), then larger of that and -limit
+
+def set_drive(fwd, strafe, turn):                      # Send forward, sideways, and turning power to the X-drive
+    fl.spin(FORWARD, fwd + strafe + turn, PERCENT)     # Front-left wheel gets a blend of all three
+    fr.spin(FORWARD, fwd - strafe - turn, PERCENT)     # Front-right wheel
+    bl.spin(FORWARD, fwd - strafe + turn, PERCENT)     # Back-left wheel
+    br.spin(FORWARD, fwd + strafe - turn, PERCENT)     # Back-right wheel (same mixing as driver control)
+
+def stop_drive():                                      # Stop all four drive motors
+    for m in (fl, fr, bl, fr):                         # Go through each motor...
+        m.stop(BRAKE)                                  # ...and brake it so the robot doesn't coast
+
+def angle_diff(target_deg, current_deg):               # Shortest way to turn from current to target, in degrees
+    return (target_deg - current_deg + 180) % 360 - 180   # Wraps the answer into -180..+180 (e.g. 350 vs 10 -> -20)
 
 
-def moveF(inches, angle=0, speed=60): #Move Foward
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
+# ---------------- Drive forward / backward ----------------
+def drive_straight(distance, max_speed=60, timeout=5000):  # distance in inches (negative = backward), timeout in ms
+    sx, sy, st = pose.x, pose.y, pose.theta            # Remember where we started and which way we faced
+    KP_DIST, KP_CROSS, KP_HEAD = 5.0, 8.0, 100.0       # Correction strengths (tune these!)
+    start_time = brain.timer.time(MSEC)                # Note the time so we can give up if something goes wrong
 
-def moveR(inches, angle=90, speed=60):#Move right
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
+    while brain.timer.time(MSEC) - start_time < timeout:   # Keep going until done OR out of time
+        dx, dy = pose.x - sx, pose.y - sy              # How far we've moved on the field since starting
+        along = dx * math.sin(st) + dy * math.cos(st)  # Progress along the intended line (forward)
+        cross = dx * math.cos(st) - dy * math.sin(st)  # Drift sideways off the line (+ = drifted right)
+        dist_err = distance - along                    # How much farther we still need to go
+        head_err = st - pose.theta                     # How far we've rotated off the starting heading (radians)
 
-def moveRS(inches, angle=90, speed=10):#Move right Slow
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
+        if abs(dist_err) < 0.5:                        # Within half an inch of the target?
+            break                                      # Done - leave the loop
 
-def moveL(inches, angle=-90, speed=60):#Move left
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
+        fwd    = clamp(KP_DIST * dist_err, max_speed)  # Forward power: big when far, small when close, capped
+        strafe = -KP_CROSS * cross                     # Drifted right -> strafe left (and vice versa)
+        turn   = KP_HEAD * head_err                    # Rotated left -> turn right (and vice versa)
+        set_drive(fwd, strafe, turn)                   # Send the blended power to the wheels
+        wait(10, MSEC)                                 # Check again in 10 ms
 
-def moveB(inches, angle=-180, speed=60):#Move backward
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
+    stop_drive()                                       # Stop the robot when finished (or timed out)
 
-def moveFL(inches, angle=-45, speed=60):#Move backward
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
 
-def moveFR(inches, angle=45, speed=60):#Move backward
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
+# ---------------- Strafe left / right ----------------
+def strafe(distance, max_speed=60, timeout=5000):      # distance in inches (+ = RIGHT, - = LEFT), timeout in ms
+    sx, sy, st = pose.x, pose.y, pose.theta            # Remember where we started and which way we faced
+    KP_DIST, KP_CROSS, KP_HEAD = 5.0, 8.0, 100.0       # Correction strengths (tune these! strafing may need more)
+    start_time = brain.timer.time(MSEC)                # Note the time so we can give up if something goes wrong
 
-def moveBL(inches, angle=-135, speed=60):#Move backward
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
+    while brain.timer.time(MSEC) - start_time < timeout:   # Keep going until done OR out of time
+        dx, dy = pose.x - sx, pose.y - sy              # How far we've moved on the field since starting
+        side  = dx * math.cos(st) - dy * math.sin(st)  # Progress sideways along the intended line (+ = right)
+        drift = dx * math.sin(st) + dy * math.cos(st)  # Drift forward/back off the line (+ = drifted forward)
+        dist_err = distance - side                     # How much farther we still need to slide
+        head_err = st - pose.theta                     # How far we've rotated off the starting heading (radians)
 
-def moveBR(inches, angle=135, speed=60):#Move backward
-    """angle: 0 forward, 90 right, 180 back, -90 left."""
-    a = angle * math.pi / 180
-    f = inches * math.cos(a) / math.sqrt(2)
-    r = inches * math.sin(a) / math.sqrt(2)
-    move_wheels([f + r, f - r, f - r, f + r], speed)
+        if abs(dist_err) < 0.5:                        # Within half an inch of the target?
+            break                                      # Done - leave the loop
+
+        strafe = clamp(KP_DIST * dist_err, max_speed)  # Sideways power: big when far, small when close, capped
+        fwd    = -KP_CROSS * drift                     # Drifted forward -> back up a little (and vice versa)
+        turn   = KP_HEAD * head_err                    # Rotated left -> turn right (and vice versa)
+        set_drive(fwd, strafe, turn)                   # Send the blended power to the wheels
+        wait(10, MSEC)                                 # Check again in 10 ms
+
+    stop_drive()                                       # Stop the robot when finished (or timed out)
 
 
 def angle_error(target, current):
@@ -282,9 +287,10 @@ Close = 1
 
 def Cascade(direction, inches, speed=100):
     """Cascade(Up, 12) raises 12 in, Cascade(Down, 12) lowers 12 in."""
-    degs = inches / CASCADE_IN_PER_REV * 360 * direction
-    cascade.spin_for(FORWARD, degs, DEGREES, speed, PERCENT) # waits until finished
-    cascade.stop(HOLD)
+    return  # no cascade on the robot right now: delete this line when it's back
+    #degs = inches / CASCADE_IN_PER_REV * 360 * direction
+    #cascade.spin_for(FORWARD, degs, DEGREES, speed, PERCENT) # waits until finished
+    #cascade.stop(HOLD)
 
 def Claw(state, delay=250):
     """Claw(Close) closes, Claw(Open) opens. delay = ms to let the claw finish moving."""
@@ -296,30 +302,8 @@ def autonomous():
      for m in motors:
         m.set_stopping(HOLD)
         imu.set_heading(0, DEGREES)
-     Claw(Close, 50)
-     trigger_piston() #turns toggle twice
-     wait(500, MSEC)
-     trigger_piston()
-     wait(100, MSEC)
-     moveF(14.8)
-     Cascade(Up, 3.9)
-     turn_to(200)
-     moveR(29)
-     wait(100,MSEC)
-     Claw(Open, 250)
-     moveL(8)
-     moveB(22)
-     moveRS(10)
-     Claw(Close, 250)
-     Cascade(Up, 6)
-     turn_to(310)
-     moveF(6)
-     moveR(16)
-     moveF(7)
-     moveR(16)
-     Claw(Open, 250)
-     moveL(5)
-     Cascade(Down, 8.9)
+        drive_straight(12)
+        strafe(12)
 
 
 
@@ -331,12 +315,12 @@ def driver_control():
         drive(-stick(controller.axis4), stick(controller.axis3),
               stick(controller.axis1) * TURN_SENSITIVITY)
 
-        if controller.buttonR2.pressing():
-            cascade.spin(FORWARD)
-        elif controller.buttonL2.pressing():
-            cascade.spin(REVERSE)
-        else:
-            cascade.stop(HOLD)
+        #if controller.buttonR2.pressing():   # no cascade right now
+        #    cascade.spin(FORWARD)
+        #elif controller.buttonL2.pressing():
+        #    cascade.spin(REVERSE)
+        #else:
+        #    cascade.stop(HOLD)
 
         wait(10, MSEC)
 
