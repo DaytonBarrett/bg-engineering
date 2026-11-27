@@ -43,11 +43,11 @@ brain = Brain()
 controller = Controller(PRIMARY)
 
 # Robot configuration code
-motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False) #cascade back motor
-motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, True) #cascade front motor
+motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True) #cascade back motor
+motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False) #cascade front motor
 cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
 cascade.set_stopping(HOLD)
-cascade.set_posisiton(0, DEGREES) #lifts all the way down
+cascade.set_position(0, DEGREES) #lifts all the way down
 claw = DigitalOut(brain.three_wire_port.b)
 inertial_11 = Inertial(Ports.PORT11)
 piston = DigitalOut(brain.three_wire_port.a)
@@ -321,13 +321,13 @@ def driver_control():
 
         if controller.buttonR2.pressing():
             lift_holding = True  #holds when you let go 
-            cascade.spin(FORWARD)
+            cascade.spin(REVERSE)
         elif controller.buttonL2.pressing():
             lift_holding = True  #holds when you let go 
-            cascade.spin(REVERSE)
+            cascade.spin(FOWARD)
         elif lift_holding:
             cascade.stop(HOLD)  #mannequin challenge for the lift (holds the lift still)
-        elif cascde.is_done():
+        elif cascade.is_done():
             lift_holding = True
 
         wait(10, MSEC)
