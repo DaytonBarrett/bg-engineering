@@ -46,6 +46,8 @@ controller = Controller(PRIMARY)
 motor_group_5_motor_a = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False) #cascade back motor
 motor_group_5_motor_b = Motor(Ports.PORT6, GearSetting.RATIO_18_1, True) #cascade front motor
 cascade = MotorGroup(motor_group_5_motor_a, motor_group_5_motor_b)
+cascade.set_stopping(HOLD)
+cascade.set_posisiton(0, DEGREES) #lifts all the way down
 claw = DigitalOut(brain.three_wire_port.b)
 inertial_11 = Inertial(Ports.PORT11)
 piston = DigitalOut(brain.three_wire_port.a)
@@ -216,8 +218,9 @@ def turn_right_to(target, speed=60):
 def turn_left_to(target, speed=60):
     turn_to(target, max_speed=speed)
 
+#This is now the cascade code part..................................................................................
 
-CASCADE_IN_PER_REV = 4.0   # inches the cascade rises per motor revolution: measure this
+Cascadeinch_per_motor_revolution= 5.5   # inches the cascade rises per motor revolution: measure this
 Up    = 1
 Down  = -1
 Open  = 0
@@ -225,14 +228,55 @@ Close = 1
 
 def Cascade(direction, inches, speed=100):
     """Cascade(Up, 12) raises 12 in, Cascade(Down, 12) lowers 12 in."""
-    degs = inches / CASCADE_IN_PER_REV * 360 * direction
+    degs = inches / Cascadeinch_per_motor_revolution * 360 * direction
     cascade.spin_for(FORWARD, degs, DEGREES, speed, PERCENT) # waits until finished
     cascade.stop(HOLD)
 
+PINHEIGHT=6.5 #Height of a pin level, like each pin goes up one pin height score one pint
+lift_holding = True #When true the lift is held at its posisiton
+MAXCASCADE_HEIGHT = 31.0  #highest inches cascade can go up
+HEIGHT_TOLERANCE = 0.5 #how manyinches leeway a level has 
+
+def cascade_motorturn(inches): #converts the inches to an angle not talking radians 
+    return inches / Cascadeinch_per_motor_revolution * 360
+
+def cascade_height():  # where the cascade height is at right now not talking centimeters
+    return cascade.position(DEGREES) / 360 * Cascadeinch_per_motor_revolution
+
+def lift_1_pinheight():
+    global lift_holding
+    current = cascade_height()
+    pinlevel = math.floor((current + HEIGHT_TOLERANCE) / PINHEIGHT) + 1
+    targetheight = pinlevel * PINHEIGHT
+    if targetheight > MAXCASCADE_HEIGHT:
+        return #do nothing (leave this function line) its already max height
+    lift_holding = False
+    cascade.spin_to_position(cascade_motorturn(targetheight), DEGREES, 100, PERCENT, wait = False)
+
+def lift_intake():
+    global lift_holding
+    lift_holding = False
+    cascade.spin_to_position(0, DEGREES, 100, PERCENT, wait = False)
+
+controller.buttonA.pressed(lift_1_pinheight)
+controller.buttonB.pressed(lift_intake)
+
+#Enter claw code........................................................................
 def Claw(state, delay=250):
     """Claw(Close) closes, Claw(Open) opens. delay = ms to let the claw finish moving."""
     claw.set(state == Open)
     wait(delay, MSEC)
+
+def claw_close():
+    claw.set(True)
+pass
+controller.buttonL1.pressed(claw_close)
+
+def claw_open():
+    claw.set(False)
+pass
+controller.buttonDown.pressed(claw_open)
+
 
 
 def autonomous():
@@ -268,6 +312,7 @@ def autonomous():
 
  
 def driver_control():
+    global lift_holding
     for m in motors:
         m.set_stopping(COAST)
     while True:
@@ -275,11 +320,15 @@ def driver_control():
               stick(controller.axis1) * TURN_SENSITIVITY)
 
         if controller.buttonR2.pressing():
+            lift_holding = True  #holds when you let go 
             cascade.spin(FORWARD)
         elif controller.buttonL2.pressing():
+            lift_holding = True  #holds when you let go 
             cascade.spin(REVERSE)
-        else:
-            cascade.stop(HOLD)
+        elif lift_holding:
+            cascade.stop(HOLD)  #mannequin challenge for the lift (holds the lift still)
+        elif cascde.is_done():
+            lift_holding = True
 
         wait(10, MSEC)
 
@@ -296,13 +345,3 @@ def trigger_piston():
 controller.buttonR1.pressed(trigger_piston)
 
 competition = Competition(driver_control, autonomous)
-
-def claw_close():
-    claw.set(True)
-pass
-controller.buttonL1.pressed(claw_close)
-
-def claw_open():
-    claw.set(False)
-pass
-controller.buttonDown.pressed(claw_open)
