@@ -111,7 +111,7 @@ def move_wheels(wheel_inches, speed):
         m.stop()
 
 
-def moveF(inches, angle=0, speed=60): #Move Foward
+def moveF(inches, angle=0, speed=60): #Move Forward
     """angle: 0 forward, 90 right, 180 back, -90 left."""
     a = angle * math.pi / 180
     f = inches * math.cos(a) / math.sqrt(2)
@@ -324,7 +324,7 @@ def driver_control():
             cascade.spin(REVERSE)
         elif controller.buttonL2.pressing():
             lift_holding = True  #holds when you let go 
-            cascade.spin(FOWARD)
+            cascade.spin(FOrWARD)
         elif lift_holding:
             cascade.stop(HOLD)  #mannequin challenge for the lift (holds the lift still)
         elif cascade.is_done():
