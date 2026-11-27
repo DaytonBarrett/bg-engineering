@@ -220,7 +220,7 @@ def turn_left_to(target, speed=60):
 
 #This is now the cascade code part..................................................................................
 
-Cascadeinch_per_motor_revolution= 5.5   # inches the cascade rises per motor revolution: measure this
+Cascadeinch_per_motor_revolution= 5.5   # inches the cascade rises per motor revolution: has to be measured
 Up    = 1
 Down  = -1
 Open  = 0
@@ -256,7 +256,7 @@ def lift_1_pinheight():
 def lift_intake():
     global lift_holding
     lift_holding = False
-    cascade.spin_to_position(0, DEGREES, 100, PERCENT, wait = False)
+    cascade.spin_to_position(0, DEGREES, 85, PERCENT, wait = False)
 
 controller.buttonA.pressed(lift_1_pinheight)
 controller.buttonB.pressed(lift_intake)
@@ -321,10 +321,10 @@ def driver_control():
 
         if controller.buttonR2.pressing():
             lift_holding = True  #holds when you let go 
-            cascade.spin(REVERSE)
+            cascade.spin(REVERSE, 85, PERCENT)
         elif controller.buttonL2.pressing():
             lift_holding = True  #holds when you let go 
-            cascade.spin(FOrWARD)
+            cascade.spin(FORWARD, 85, PERCENT)
         elif lift_holding:
             cascade.stop(HOLD)  #mannequin challenge for the lift (holds the lift still)
         elif cascade.is_done():
